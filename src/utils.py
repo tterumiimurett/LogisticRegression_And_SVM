@@ -80,7 +80,7 @@ def generate_circular_data(n_samples=200, radius=1.0, noise=0.1, center=np.array
     return data, labels
 
 
-def data_visualization(X: np.ndarray, y: np.ndarray):
+def data_visualization(X: np.ndarray, y: np.ndarray, save_path: str = None):
     """
     可视化二分类数据
     
@@ -92,6 +92,8 @@ def data_visualization(X: np.ndarray, y: np.ndarray):
         特征矩阵，至少包含 2 个特征用于可视化
     y : np.ndarray, shape (n_samples,)
         类别标签 {0, 1}
+    save_path : str, 可选
+        保存图片的路径，如果为 None 则显示图片
     """
     plt.figure()
     plt.scatter(X[y==0][:, 0], X[y==0][:, 1], c='blue', label='Class 0')
@@ -100,9 +102,15 @@ def data_visualization(X: np.ndarray, y: np.ndarray):
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
     plt.legend()
-    plt.show()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"  💾 Saved figure: {save_path}")
+    else:
+        plt.show()
 
-def prediction_visualization_2d(f1xx: np.ndarray, f2yy: np.ndarray, f1f2pred: np.ndarray, X: np.ndarray, y: np.ndarray, title: str):
+def prediction_visualization_2d(f1xx: np.ndarray, f2yy: np.ndarray, f1f2pred: np.ndarray, X: np.ndarray, y: np.ndarray, title: str, save_path: str = None):
     """
     可视化二维特征空间的预测结果
     
@@ -122,16 +130,25 @@ def prediction_visualization_2d(f1xx: np.ndarray, f2yy: np.ndarray, f1f2pred: np
         真实数据的标签
     title : str
         图表标题
+    save_path : str, 可选
+        保存图片的路径，如果为 None 则显示图片
     """
-    plt.figure()
+    plt.figure(figsize=(10, 8))
     plt.contourf(f1xx, f2yy, f1f2pred, alpha=0.3, cmap=plt.cm.coolwarm)
-    plt.scatter(X[y==0][:, 0], X[y==0][:, 1], c='blue', label='True Class 0', marker='o')
-    plt.scatter(X[y==1][:, 0], X[y==1][:, 1], c='red', label='True Class 1', marker='o')
-    plt.title("Prediction Visualization")
+    plt.scatter(X[y==0][:, 0], X[y==0][:, 1], c='blue', label='True Class 0', marker='o', edgecolors='k')
+    plt.scatter(X[y==1][:, 0], X[y==1][:, 1], c='red', label='True Class 1', marker='o', edgecolors='k')
+    plt.title(title)
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
     plt.legend()
-    plt.show()
+    plt.grid(alpha=0.3)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"  💾 Saved figure: {save_path}")
+    else:
+        plt.show()
 
 def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
@@ -158,7 +175,7 @@ def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return correct / total if total > 0 else 0.0
 
 
-def plot_loss_curve(loss_values: list, title: str = "Loss Curve"):
+def plot_loss_curve(loss_values: list, title: str = "Loss Curve", save_path: str = None):
     """
     绘制损失函数曲线
     
@@ -170,11 +187,19 @@ def plot_loss_curve(loss_values: list, title: str = "Loss Curve"):
         损失值列表，每个元素对应一次迭代的损失
     title : str, 默认 "Loss Curve"
         图表标题
+    save_path : str, 可选
+        保存图片的路径，如果为 None 则显示图片
     """
-    plt.figure()
-    plt.plot(range(1, len(loss_values) + 1), loss_values, marker='o')
-    plt.title(title)
-    plt.xlabel("Iteration")
-    plt.ylabel("Loss")
-    plt.grid()
-    plt.show()
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(loss_values) + 1), loss_values, marker='o', markersize=3, linewidth=2)
+    plt.title(title, fontsize=14)
+    plt.xlabel("Iteration", fontsize=12)
+    plt.ylabel("Loss", fontsize=12)
+    plt.grid(alpha=0.3)
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"  💾 Saved figure: {save_path}")
+    else:
+        plt.show()

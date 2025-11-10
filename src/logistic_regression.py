@@ -285,7 +285,15 @@ class LogisticRegression:
         loss = -( (pos * np.log(probs)).sum() + (neg * np.log(1 - probs)).sum() ) / n_samples
         dL_dz = GradDescent.adaptive_grad(self.logistic_pure_loss, z) / n_samples
 
-        return float(loss), dL_dz
+        dL_dw = X.T @ dL_dz
+        dL_db = dL_dz.sum()
+
+        grads_param = {
+            'weights': dL_dw,
+            'bias': dL_db,
+        }
+
+        return float(loss), grads_param
 
     def logistic_pure_loss(self, z: np.ndarray) -> float:
         """
