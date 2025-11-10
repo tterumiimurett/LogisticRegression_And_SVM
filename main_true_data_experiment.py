@@ -8,14 +8,13 @@ if __name__ == "__main__":
     # Load the true dataset
     X_train, y_train, X_test, y_test = data_loading.load_gisette_local()
 
+    model = LogisticRegression()
+
     start_time = time.time()
     # Initialize the Logistic Regression model
-    model = LogisticRegression(X_train, y_train)
+    model.fit(X_train, y_train, method='analytic')
     end_time = time.time()
     print(f"Training time for Logistic Regression on true data: {end_time - start_time:.4f} seconds")
-
-    converged_status = "converged" if model.gradient.converged else "not converged"
-    print(f"Logistic Regression training {converged_status} in {model.gradient.iter} iterations.")
 
     # Evaluate the model
     accuracy_train = model.evaluate(X_train, y_train)
@@ -25,6 +24,5 @@ if __name__ == "__main__":
     print(f"Model accuracy on true data: {accuracy:.2f}")
 
     loss_curve = model.get_loss_curve()
-
     # Plot the loss curve
     utils.plot_loss_curve(loss_curve)

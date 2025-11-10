@@ -10,8 +10,10 @@ if __name__ == "__main__":
     
     # 生成合成数据
     X, y = utils.generate_synthetic_data(n_samples=200, noise=0.4)
+    logisticReg = LogisticRegression()
+
     start_time = time.time()
-    logisticReg = LogisticRegression(X, y)
+    logisticReg.fit(X, y, method='analytic')
     end_time = time.time()
     print(f"Training time for Logistic Regression on synthetic data: {end_time - start_time:.4f} seconds")
 
@@ -25,14 +27,14 @@ if __name__ == "__main__":
 
     accuracy = utils.accuracy_score(y, logisticReg.predict(X))
     print(f"Accuracy for Logistic Regression on synthetic data: {accuracy:.4f}")
-    converged_status = "converged" if logisticReg.gradient.converged else "not converged"
-    print(f"Logistic Regression training {converged_status} in {logisticReg.gradient.iter} iterations.")
-    utils.plot_loss_curve(logisticReg.gradient.loss_curve, title="Logistic Regression Loss Curve")
+
+    loss_curve = logisticReg.get_loss_curve()
+    utils.plot_loss_curve(loss_curve, title="Logistic Regression Loss Curve")
     # 生成圆形数据
     X, y = utils.generate_circular_data(n_samples=200, noise=0.1)
     
     start_time = time.time()
-    logisticReg = LogisticRegression(X, y)
+    logisticReg.fit(X, y)
     end_time = time.time()
     print(f"Training time for Logistic Regression on circular data: {end_time - start_time:.4f} seconds")
 
@@ -46,6 +48,6 @@ if __name__ == "__main__":
 
     accuracy = utils.accuracy_score(y, logisticReg.predict(X))
     print(f"Accuracy for Logistic Regression on circular data: {accuracy:.4f}")
-    converged_status = "converged" if logisticReg.gradient.converged else "not converged"
-    print(f"Logistic Regression training {converged_status} in {logisticReg.gradient.iter} iterations.")
-    utils.plot_loss_curve(logisticReg.gradient.loss_curve, title="Logistic Regression Loss Curve")
+
+    loss_curve = logisticReg.get_loss_curve()
+    utils.plot_loss_curve(loss_curve, title="Logistic Regression Loss Curve")

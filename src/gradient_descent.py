@@ -13,7 +13,7 @@ class GradDescent:
 
     Attributes
     ----------
-    learning_rate : float
+    lr : float
         Step size.
     max_iter : int
         Maximum number of iterations.
@@ -25,97 +25,37 @@ class GradDescent:
         Learned bias scalar.
     """
 
-    def __init__(self, learning_rate: float, max_iter: int, tol: float, plot_progress: bool = False):
-        self.learning_rate = float(learning_rate)
+    def __init__(self, lr: float = 0.1, max_iter: int = 10000, tol: float = 1e-5):
+        self.lr = float(lr)
         self.max_iter = int(max_iter)
         self.tol = float(tol)
-        self.weights: Optional[np.ndarray] = None
-        self.bias: Optional[float] = None
-        self.converged: bool = False
-        self.iter = 0
-        self.plot_progress = plot_progress
-        self.loss_curve = []
 
-    def fit(
+    def optimize(
         self,
-        X: np.ndarray,
-        y: np.ndarray,
-        loss: Callable[[np.ndarray, np.ndarray], Tuple[float, np.ndarray]],
-        init_w: Optional[np.ndarray] = None,
-        init_b: Optional[float] = None,
-        average_gradients: bool = True,
+        computeLoss_and_Grad: Callable[[np.ndarray], Tuple[float, np.ndarray]],
+        init_params: np.ndarray,
+        callback: Optional[Callable[[int, np.ndarray, float], None]] = None
     ) -> Dict[str, object]:
-        """
-        Fit the linear model by gradient descent.
-
-        Parameters
-        ----------
-        X : np.ndarray, shape (n_samples, n_features)
-            Design matrix.
-        y : np.ndarray, shape (n_samples,)
-            Targets.
-        loss : callable
-            Function (z, y) -> (loss_value, dL_dz) where z = X @ w + b.
-        init_w : optional np.ndarray
-            Initial weights; defaults to zeros.
-        init_b : optional float
-            Initial bias; defaults to 0.0.
-        average_gradients : bool
-            If True, use mean gradients; otherwise use sum.
-
-        Returns
-        -------
-        Dict with keys:
-            status : str
-            iter : int
-            loss : float
-            weights : np.ndarray
-            bias : float
-        """
-        X = np.asarray(X)
-        y = np.asarray(y)
-        n_samples, n_features = X.shape
-
-        w = np.zeros(n_features) if init_w is None else np.asarray(init_w, dtype=float).copy()
-        b = 0.0 if init_b is None else float(init_b)
-
-        lr = self.learning_rate
+        
+        params = {k: v.copy() for k, v in init_params.items()}
 
         for i in range(1, self.max_iter + 1):
-            z = X @ w + b                          # shape (n_samples,)
-            L, dL_dz = loss(z, y)                  # L: float, dL_dz: (n_samples,)
-            if self.plot_progress:
-                self.loss_curve.append(L)
-            if dL_dz.shape != (n_samples,):
-                raise ValueError("loss must return dL_dz with shape (n_samples,)")
+            L, dL_dparams = computeLoss_and_Grad(params)
 
-            if average_gradients:
-                scale = 1.0 / n_samples
-            else:
-                scale = 1.0
+            if callback is not None:
+                callback(i, L, params)
 
-            # Vectorized gradients for linear model
-            dw = (X.T @ dL_dz) * scale             # shape (n_features,)
-            db = dL_dz.sum() * scale               # scalar
+            for key in params:
+                params[key] -= self.lr * dL_dparams[key]
 
-            # Convergence check (∞-norm of parameter gradients)
-            grad_inf = max(np.linalg.norm(dw, ord=np.inf), abs(db))
-            if grad_inf < self.tol:
-                self.weights, self.bias = w, b
-                self.converged = True
-                self.iter = i
-                return {"status": "converged", "iter": i, "loss": float(L), "weights": w, "bias": b}
+            if self._check_convergence(dL_dparams):
+                break
 
-            # Parameter update
-            w -= lr * dw
-            b -= lr * db
+        return params
 
-        # Save final params
-        self.weights, self.bias = w, b
-        self.iter = self.max_iter
-        return {"status": "max_iter_reached", "iter": self.max_iter, "loss": float(L), "weights": w, "bias": b}
-
-    # ---------- Finite-difference utilities (optional) ----------
+    def _check_convergence(self, dL_dparams: Dict[str, np.ndarray]) -> bool:
+        max_grad_norm = max(np.max(np.abs(grad)) for grad in dL_dparams.values())
+        return max_grad_norm < self.tol
 
     @staticmethod
     def central_diff_grad(func: Callable[[np.ndarray], float], x: np.ndarray) -> np.ndarray:
@@ -166,18 +106,3 @@ class GradDescent:
             g[i] = (func(x + h_final * ei) - func(x - h_final * ei)) / (2 * h_final)
 
         return g
-
-# ---------------------- Example loss functions ----------------------
-
-def mse_loss(z: np.ndarray, y: np.ndarray) -> Tuple[float, np.ndarray]:
-    """
-    Mean squared error:
-        L = 0.5 * mean((z - y)^2)
-        dL/dz = (z - y) / n
-    """
-    z = np.asarray(z, dtype=float)
-    y = np.asarray(y, dtype=float)
-    diff = z - y
-    dL_dz = diff / z.size
-    L = 0.5 * np.dot(diff, diff) / z.size
-    return float(L), dL_dz

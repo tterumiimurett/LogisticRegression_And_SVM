@@ -1,0 +1,7 @@
+data/
+notebooks/
+
+.DS_store
+.pyc
+.vscode/
+__pycache__/
